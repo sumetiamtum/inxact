@@ -199,6 +199,143 @@ function get_password() {
     echo ${password:0:13}
 }
 
+function install_nginx {
+    check_install nginx nginx
+    
+    # Need to increase the bucket size for Debian 5.
+    cat > /etc/nginx/conf.d/lowendbox.conf <<END
+server_names_hash_bucket_size 64;
+END
+
+    invoke-rc.d nginx restart
+}
+
+function install_php {
+    check_install php-cgi php5-cgi php5-cli php5-mysql
+    cat > /etc/init.d/php-cgi <<END
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          php-cgi
+# Required-Start:    networking
+# Required-Stop:     networking
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start the PHP FastCGI processes web server.
+### END INIT INFO
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+NAME="php-cgi"
+DESC="php-cgi"
+PIDFILE="/var/run/www/php.pid"
+FCGIPROGRAM="/usr/bin/php-cgi"
+FCGISOCKET="/var/run/www/php.sock"
+FCGIUSER="www-data"
+FCGIGROUP="www-data"
+if [ -e /etc/default/php-cgi ]
+then
+    source /etc/default/php-cgi
+fi
+[ -z "\$PHP_FCGI_CHILDREN" ] && PHP_FCGI_CHILDREN=1
+[ -z "\$PHP_FCGI_MAX_REQUESTS" ] && PHP_FCGI_MAX_REQUESTS=5000
+ALLOWED_ENV="PATH USER PHP_FCGI_CHILDREN PHP_FCGI_MAX_REQUESTS FCGI_WEB_SERVER_ADDRS"
+set -e
+. /lib/lsb/init-functions
+case "\$1" in
+start)
+    unset E
+    for i in \${ALLOWED_ENV}; do
+        E="\${E} \${i}=\${!i}"
+    done
+    log_daemon_msg "Starting \$DESC" \$NAME
+    env - \${E} start-stop-daemon --start -x \$FCGIPROGRAM -p \$PIDFILE \\
+        -c \$FCGIUSER:\$FCGIGROUP -b -m -- -b \$FCGISOCKET
+    log_end_msg 0
+    ;;
+stop)
+    log_daemon_msg "Stopping \$DESC" \$NAME
+    if start-stop-daemon --quiet --stop --oknodo --retry 30 \\
+        --pidfile \$PIDFILE --exec \$FCGIPROGRAM
+    then
+        rm -f \$PIDFILE
+        log_end_msg 0
+    else
+        log_end_msg 1
+    fi
+    ;;
+restart|force-reload)
+    \$0 stop
+    sleep 1
+    \$0 start
+    ;;
+*)
+    echo "Usage: \$0 {start|stop|restart|force-reload}" >&2
+    exit 1
+    ;;
+esac
+exit 0
+END
+    chmod 755 /etc/init.d/php-cgi
+    mkdir -p /var/run/www
+    chown www-data:www-data /var/run/www
+
+    cat > /etc/nginx/fastcgi_php <<END
+location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    if (-f \$request_filename) {
+        fastcgi_pass unix:/var/run/www/php.sock;
+    }
+}
+END
+    update-rc.d php-cgi defaults
+    invoke-rc.d php-cgi start
+}
+
+function install_wordpress {
+    check_install wget wget
+    if [ -z "$1" ]
+    then
+        die "Usage: `basename $0` wordpress <hostname>"
+    fi
+
+    # Downloading the WordPress' latest and greatest distribution.
+    mkdir /tmp/wordpress.$$
+    wget -O - http://wordpress.org/latest.tar.gz | \
+        tar zxf - -C /tmp/wordpress.$$
+    mv /tmp/wordpress.$$/wordpress "/var/www/$1"
+    rm -rf /tmp/wordpress.$$
+    chown root:root -R "/var/www/$1"
+
+    # Setting up the MySQL database
+    dbname=`echo $1 | tr . _`
+    userid=`get_domain_name $1`
+    # MySQL userid cannot be more than 15 characters long
+    userid="${userid:0:15}"
+    passwd=`get_password "$userid@mysql"`
+    cp "/var/www/$1/wp-config-sample.php" "/var/www/$1/wp-config.php"
+    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" \
+        "/var/www/$1/wp-config.php"
+    mysqladmin create "$dbname"
+    echo "GRANT ALL PRIVILEGES ON \`$dbname\`.* TO \`$userid\`@localhost IDENTIFIED BY '$passwd';" | \
+        mysql
+
+    # Setting up Nginx mapping
+    cat > "/etc/nginx/sites-enabled/$1.conf" <<END
+server {
+    server_name $1;
+    root /var/www/$1;
+    include /etc/nginx/fastcgi_php;
+    location / {
+        index index.php;
+        if (!-e \$request_filename) {
+            rewrite ^(.*)$  /index.php last;
+        }
+    }
+}
+END
+    invoke-rc.d nginx reload
+}
+
 ########################################################################
 # START OF PROGRAM
 ########################################################################
