@@ -29,6 +29,9 @@ function update_upgrade {
     # we try to install any package
     apt-get -q -y update
     apt-get -q -y upgrade
+    apt-get install -q -y sudo
+    sudo apt-get install -q -y rsync
+    sudo apt-get install -q -y nano
 }
 
 function install_dash {
