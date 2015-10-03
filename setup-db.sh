@@ -2114,7 +2114,7 @@ function install_wordpress {
     cd /var/www/html/$1/public_html/
     sudo chown -R www-data:www-data /var/www/html/$1/public_html/*
     #Create the uploads directory and establish permissions
-    mkdir /var/www/html/$1/wp-content/uploads
+    mkdir /var/www/html/$1/public_html/wp-content/uploads
     cd /var/www/html/$1/public_html/wp-content/uploads
     sudo chown -R :www-data /var/www/html/$1/public_html/wp-content/uploads
     sudo chmod -R ugo+rw /var/www/html/$1/public_html/wp-content/uploads
@@ -2173,6 +2173,10 @@ server {
 	}
 }
 EOF
+    #Enable the new server block
+    sudo ln -s /etc/nginx/sites-available/$1 /etc/nginx/sites-enabled/
+    #Restart the nginx service
+    sudo service nginx restart
     invoke-rc.d nginx reload
     sudo service php5-fpm restart
 }
