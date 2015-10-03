@@ -63,6 +63,76 @@ END
     invoke-rc.d xinetd restart
 }
 
+function check_sanity {
+    # Do some sanity checking.
+    if [ $(/usr/bin/id -u) != "0" ]
+    then
+        die 'Must be run by root user'
+    fi
+
+    if [ ! -f /etc/debian_version ]
+    then
+        die "Distribution is not supported"
+    fi
+}
+
+function check_install {
+    if [ -z "`which "$1" 2>/dev/null`" ]
+    then
+        executable=$1
+        shift
+        while [ -n "$1" ]
+        do
+            DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
+            print_info "$1 installed for $executable"
+            shift
+        done
+    else
+        print_warn "$2 already installed"
+    fi
+}
+
+function install_syslogd {
+    # We just need a simple vanilla syslogd. Also there is no need to log to
+    # so many files (waste of fd). Just dump them into
+    # /var/log/(cron/mail/messages)
+    check_install /usr/sbin/syslogd inetutils-syslogd
+    invoke-rc.d inetutils-syslogd stop
+
+    for file in /var/log/*.log /var/log/mail.* /var/log/debug /var/log/syslog
+    do
+        [ -f "$file" ] && rm -f "$file"
+    done
+    for dir in fsck news
+    do
+        [ -d "/var/log/$dir" ] && rm -rf "/var/log/$dir"
+    done
+
+    cat > /etc/syslog.conf <<END
+*.*;mail.none;cron.none -/var/log/messages
+cron.*                  -/var/log/cron
+mail.*                  -/var/log/mail
+END
+
+    [ -d /etc/logrotate.d ] || mkdir -p /etc/logrotate.d
+    cat > /etc/logrotate.d/inetutils-syslogd <<END
+/var/log/cron
+/var/log/mail
+/var/log/messages {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+   sharedscripts
+   postrotate
+      /etc/init.d/inetutils-syslogd reload >/dev/null
+   endscript
+}
+END
+
+    invoke-rc.d inetutils-syslogd start
+}
 
 ########################################################################
 # START OF PROGRAM
