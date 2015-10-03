@@ -147,6 +147,18 @@ function check_remove {
     fi
 }
 
+function print_info {
+    echo -n -e '\e[1;36m'
+    echo -n $1
+    echo -e '\e[0m'
+}
+
+function print_warn {
+    echo -n -e '\e[1;33m'
+    echo -n $1
+    echo -e '\e[0m'
+}
+
 ########################################################################
 # START OF PROGRAM
 ########################################################################
