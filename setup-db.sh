@@ -134,6 +134,16 @@ END
     invoke-rc.d inetutils-syslogd start
 }
 
+function check_remove {
+    if [ -n "`which "$1" 2>/dev/null`" ]
+    then
+        DEBIAN_FRONTEND=noninteractive apt-get -q -y remove --purge "$2"
+        print_info "$2 removed"
+    else
+        print_warn "$2 is not installed"
+    fi
+}
+
 ########################################################################
 # START OF PROGRAM
 ########################################################################
