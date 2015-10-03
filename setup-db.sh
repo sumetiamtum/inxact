@@ -2212,6 +2212,10 @@ system)
     install_dash
     install_syslogd
     install_dropbear
+    install_exim4
+    install_mysql
+    install_nginx
+    install_php
     ;;
 wordpress)
     install_wordpress $2
