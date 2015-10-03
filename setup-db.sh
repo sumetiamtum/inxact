@@ -2114,28 +2114,28 @@ function install_wordpress {
     cd /var/www/html/$1/public_html/
     sudo chown -R www-data:www-data /var/www/html/$1/public_html/*
     #Create the uploads directory and establish permissions
-    mkdir wp-content/uploads
+    mkdir /var/www/html/$1/wp-content/uploads
     cd /var/www/html/$1/public_html/wp-content/uploads
     sudo chown -R :www-data /var/www/html/$1/public_html/wp-content/uploads
     sudo chmod -R ugo+rw /var/www/html/$1/public_html/wp-content/uploads
+    cd /var/www/html/$1/public_html
     sudo chmod -R ugo+rw /var/www/html/$1/public_html
-
+    cd /var/www/html
 
     # Setting up Nginx mapping
     
-    
     #These variables are set for facilitating the writing of the site configuration file
-#It was the only way I could get it to work
-urivar='$uri'
-requri='$request_uri'
-argsvar='$args'
-docrootvar='$document_root'
-fastcgivar='$fastcgi_script_name'
-httpuseragent='$http_user_agent'
-#Create the server block config file - it tells the server where the root directory is for the site
-#Note: this setup establishes the site as www.site.com and not site.com. If you want the other way then
-#you need to swap the two server names around
-cat > /etc/nginx/sites-available/$1 << EOF
+    #It was the only way I could get it to work
+    urivar='$uri'
+    requri='$request_uri'
+    argsvar='$args'
+    docrootvar='$document_root'
+    fastcgivar='$fastcgi_script_name'
+    httpuseragent='$http_user_agent'
+    #Create the server block config file - it tells the server where the root directory is for the site
+    #Note: this setup establishes the site as www.site.com and not site.com. If you want the other way then
+    #you need to swap the two server names around
+    cat > /etc/nginx/sites-available/$1 << EOF
 server {
     server_name $1;
     return       301 http://www.$1$requri;
