@@ -336,6 +336,17 @@ END
     invoke-rc.d nginx reload
 }
 
+function install_exim4 {
+    check_install mail exim4
+    if [ -f /etc/exim4/update-exim4.conf.conf ]
+    then
+        sed -i \
+            "s/dc_eximconfig_configtype='local'/dc_eximconfig_configtype='internet'/" \
+            /etc/exim4/update-exim4.conf.conf
+        invoke-rc.d exim4 restart
+    fi
+}
+
 ########################################################################
 # START OF PROGRAM
 ########################################################################
