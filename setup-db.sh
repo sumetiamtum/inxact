@@ -187,6 +187,18 @@ END
     chmod 600 ~/.my.cnf
 }
 
+function get_password() {
+    # Check whether our local salt is present.
+    SALT=/var/lib/radom_salt
+    if [ ! -f "$SALT" ]
+    then
+        head -c 512 /dev/urandom > "$SALT"
+        chmod 400 "$SALT"
+    fi
+    password=`(cat "$SALT"; echo $1) | md5sum | base64`
+    echo ${password:0:13}
+}
+
 ########################################################################
 # START OF PROGRAM
 ########################################################################
