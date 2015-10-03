@@ -209,7 +209,7 @@ function install_nginx {
 }
 
 function install_php {
-    check_install php5-fpm php5-gd php5-curl php5-mysql libssh2-php
+    check_install php5-fpm
     cat > /etc/php5/fpm/php.ini << EOF
 [PHP]
 
@@ -2069,6 +2069,7 @@ ldap.max_links = -1
 ; tab-width: 4
 ; End:
 EOF
+    check_install php5-gd php5-curl php5-mysql libssh2-php
     sudo service php5-fpm restart
 }
 
