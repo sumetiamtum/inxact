@@ -209,7 +209,7 @@ function install_nginx {
 }
 
 function install_php {
-    check_install php5-fpm
+    sudo apt-get -q -y install php5-fpm
     cat > /etc/php5/fpm/php.ini << EOF
 [PHP]
 
