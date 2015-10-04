@@ -249,10 +249,13 @@ function install_wordpress {
     
     # Setting up the MySQL database
     dbname=`echo $1 | tr . _`
+    echo "Database Name is: $dbname"
     userid=`get_domain_name $1`
     # MySQL userid cannot be more than 15 characters long
     userid="${userid:0:15}"
+    echo "User ID is: $userid"
     passwd=`get_password "$userid@mysql"`
+    echo "Password is: $passwd"
     #Set up the wordpress config file with the mySQL database details
     cp wp-config-sample.php wp-config.php
     chmod 640 wp-config.php
