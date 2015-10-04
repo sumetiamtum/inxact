@@ -345,49 +345,6 @@ function install_exim4 {
     fi
 }
 
-########################################################################
-# START OF PROGRAM
-########################################################################
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin
-
-check_sanity
-case "$1" in
-exim4)
-    install_exim4
-    ;;
-mysql)
-    install_mysql
-    ;;
-nginx)
-    install_nginx
-    ;;
-php)
-    install_php
-    ;;
-system)
-    remove_unneeded
-    update_upgrade
-    install_dash
-    install_syslogd
-    install_dropbear
-    install_exim4
-    install_mysql
-    install_nginx
-    install_php
-    ;;
-wordpress)
-    install_wordpress $2
-    ;;
-*)
-    echo 'Usage:' `basename $0` '[option]'
-    echo 'Available option:'
-    for option in system exim4 mysql nginx php wordpress
-    do
-        echo '  -' $option
-    done
-    ;;
-esac
-
 function install_php {
     sudo apt-get -q -y install php5-fpm
     cat > /etc/php5/fpm/php.ini << EOF
@@ -2252,4 +2209,37 @@ EOF
     check_install php5-gd php5-curl php5-mysql libssh2-php
     sudo service php5-fpm restart
 }
+
+########################################################################
+# START OF PROGRAM
+########################################################################
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+check_sanity
+case "$1" in
+system)
+    remove_unneeded
+    update_upgrade
+    install_dash
+    install_syslogd
+    install_dropbear
+    install_exim4
+    install_mysql
+    install_nginx
+    install_php
+    ;;
+wordpress)
+    install_wordpress $2
+    ;;
+*)
+    echo 'Usage:' `basename $0` '[option]'
+    echo 'Available option:'
+    for option in system exim4 mysql nginx php wordpress
+    do
+        echo '  -' $option
+    done
+    ;;
+esac
+
+
 
