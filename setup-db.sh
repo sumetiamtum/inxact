@@ -259,10 +259,11 @@ function install_wordpress {
     #Set up the wordpress config file with the mySQL database details
     cp wp-config-sample.php wp-config.php
     chmod 640 wp-config.php
-    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" \
-        "/var/www/$1/wp-config.php"
+    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" wp-config.php
     mysqladmin create "$dbname"
     echo "GRANT ALL PRIVILEGES ON \`$dbname\`.* TO \`$userid\`@localhost IDENTIFIED BY '$passwd';" | \
+        mysql
+    echo "FLUSH PRIVILEGES;"| \
         mysql
     #Copy the wordpress files over to the domain root
     sudo rsync -avP ~/wordpress/ /var/www/html/$1/public_html/
