@@ -79,6 +79,11 @@ function check_sanity {
     fi
 }
 
+function die {
+    echo "ERROR: $1" > /dev/null 1>&2
+    exit 1
+}
+
 function check_install {
     if [ -z "`which "$1" 2>/dev/null`" ]
     then
@@ -93,6 +98,19 @@ function check_install {
     else
         print_warn "$2 already installed"
     fi
+}
+
+function get_domain_name() {
+    # Getting rid of the lowest part.
+    domain=${1%.*}
+    lowest=`expr "$domain" : '.*\.\([a-z][a-z]*\)'`
+    case "$lowest" in
+    com|net|org|gov|edu|co)
+        domain=${domain%.*}
+        ;;
+    esac
+    lowest=`expr "$domain" : '.*\.\([a-z][a-z]*\)'`
+    [ -z "$lowest" ] && echo "$domain" || echo "$lowest"
 }
 
 function install_syslogd {
@@ -207,6 +225,168 @@ function install_nginx {
 
     invoke-rc.d nginx restart
 }
+
+function install_wordpress {
+    check_install wget wget
+    if [ -z "$1" ]
+    then
+        die "Usage: `basename $0` wordpress <hostname>"
+    fi
+
+    #Create the necessary folder structure
+    sudo mkdir -p /var/www/html/$1/public_html
+    #We should change the ownership of this directory
+    sudo chown -R $USER:$USER /var/www/html/$1/public_html/
+    #Set the read permissions to the Nginx web root (/var/www/html/) directory, so that everyone can read files from that directory.
+    sudo chmod -R 755 /var/www/html/
+    # Downloading the WordPress' latest and greatest distribution.
+    #Go back to root directory
+    cd ~
+    # Download, unpack and configure WordPress
+    wget http://wordpress.org/latest.tar.gz
+    tar xzvf latest.tar.gz
+    cd ~/wordpress
+    
+    # Setting up the MySQL database
+    dbname=`echo $1 | tr . _`
+    userid=`get_domain_name $1`
+    # MySQL userid cannot be more than 15 characters long
+    userid="${userid:0:15}"
+    passwd=`get_password "$userid@mysql"`
+    #Set up the wordpress config file with the mySQL database details
+    cp wp-config-sample.php wp-config.php
+    chmod 640 wp-config.php
+    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" \
+        "/var/www/$1/wp-config.php"
+    mysqladmin create "$dbname"
+    echo "GRANT ALL PRIVILEGES ON \`$dbname\`.* TO \`$userid\`@localhost IDENTIFIED BY '$passwd';" | \
+        mysql
+    #Copy the wordpress files over to the domain root
+    sudo rsync -avP ~/wordpress/ /var/www/html/$1/public_html/
+    #Move to the domain root to set some permissions
+    cd /var/www/html/$1/public_html/
+    sudo chown -R www-data:www-data /var/www/html/$1/public_html/*
+    #Create the uploads directory and establish permissions
+    mkdir /var/www/html/$1/public_html/wp-content/uploads
+    cd /var/www/html/$1/public_html/wp-content/uploads
+    sudo chown -R :www-data /var/www/html/$1/public_html/wp-content/uploads
+    sudo chmod -R ugo+rw /var/www/html/$1/public_html/wp-content/uploads
+    cd /var/www/html/$1/public_html
+    sudo chmod -R ugo+rw /var/www/html/$1/public_html
+    cd /var/www/html
+
+    # Setting up Nginx mapping
+    
+    #These variables are set for facilitating the writing of the site configuration file
+    #It was the only way I could get it to work
+    urivar='$uri'
+    requri='$request_uri'
+    argsvar='$args'
+    docrootvar='$document_root'
+    fastcgivar='$fastcgi_script_name'
+    httpuseragent='$http_user_agent'
+    #Create the server block config file - it tells the server where the root directory is for the site
+    #Note: this setup establishes the site as www.site.com and not site.com. If you want the other way then
+    #you need to swap the two server names around
+    cat > /etc/nginx/sites-available/$1 << EOF
+server {
+    server_name $1;
+    return       301 http://www.$1$requri;
+}
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    root /var/www/html/$1/public_html/;
+    index index.php index.html index.htm;
+
+    server_name www.$1;
+
+    location / {
+        try_files $urivar $urivar/ /index.php?q=$urivar&$argsvar;
+    }
+
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/www;
+    }
+
+    location ~ \.php$ {
+        try_files $urivar =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $docrootvar$fastcgivar;
+        include fastcgi_params;
+    }
+	
+	if ($httpuseragent ~* (rogerbot|exabot|gigabot|sitebot|AhrefsBot|mj12bot|dobot|spbot) ) {
+		return 403;
+	}
+}
+EOF
+    #Enable the new server block
+    sudo ln -s /etc/nginx/sites-available/$1 /etc/nginx/sites-enabled/
+    #Restart the nginx service
+    sudo service nginx restart
+    invoke-rc.d nginx reload
+    sudo service php5-fpm restart
+}
+
+function install_exim4 {
+    check_install mail exim4
+    if [ -f /etc/exim4/update-exim4.conf.conf ]
+    then
+        sed -i \
+            "s/dc_eximconfig_configtype='local'/dc_eximconfig_configtype='internet'/" \
+            /etc/exim4/update-exim4.conf.conf
+        invoke-rc.d exim4 restart
+    fi
+}
+
+########################################################################
+# START OF PROGRAM
+########################################################################
+export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+check_sanity
+case "$1" in
+exim4)
+    install_exim4
+    ;;
+mysql)
+    install_mysql
+    ;;
+nginx)
+    install_nginx
+    ;;
+php)
+    install_php
+    ;;
+system)
+    remove_unneeded
+    update_upgrade
+    install_dash
+    install_syslogd
+    install_dropbear
+    install_exim4
+    install_mysql
+    install_nginx
+    install_php
+    ;;
+wordpress)
+    install_wordpress $2
+    ;;
+*)
+    echo 'Usage:' `basename $0` '[option]'
+    echo 'Available option:'
+    for option in system exim4 mysql nginx php wordpress
+    do
+        echo '  -' $option
+    done
+    ;;
+esac
 
 function install_php {
     sudo apt-get -q -y install php5-fpm
@@ -2073,164 +2253,3 @@ EOF
     sudo service php5-fpm restart
 }
 
-function install_wordpress {
-    check_install wget wget
-    if [ -z "$1" ]
-    then
-        die "Usage: `basename $0` wordpress <hostname>"
-    fi
-
-    #Create the necessary folder structure
-    sudo mkdir -p /var/www/html/$1/public_html
-    #We should change the ownership of this directory
-    sudo chown -R $USER:$USER /var/www/html/$1/public_html/
-    #Set the read permissions to the Nginx web root (/var/www/html/) directory, so that everyone can read files from that directory.
-    sudo chmod -R 755 /var/www/html/
-    # Downloading the WordPress' latest and greatest distribution.
-    #Go back to root directory
-    cd ~
-    # Download, unpack and configure WordPress
-    wget http://wordpress.org/latest.tar.gz
-    tar xzvf latest.tar.gz
-    cd ~/wordpress
-    
-    # Setting up the MySQL database
-    dbname=`echo $1 | tr . _`
-    userid=`get_domain_name $1`
-    # MySQL userid cannot be more than 15 characters long
-    userid="${userid:0:15}"
-    passwd=`get_password "$userid@mysql"`
-    #Set up the wordpress config file with the mySQL database details
-    cp wp-config-sample.php wp-config.php
-    chmod 640 wp-config.php
-    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" \
-        "/var/www/$1/wp-config.php"
-    mysqladmin create "$dbname"
-    echo "GRANT ALL PRIVILEGES ON \`$dbname\`.* TO \`$userid\`@localhost IDENTIFIED BY '$passwd';" | \
-        mysql
-    #Copy the wordpress files over to the domain root
-    sudo rsync -avP ~/wordpress/ /var/www/html/$1/public_html/
-    #Move to the domain root to set some permissions
-    cd /var/www/html/$1/public_html/
-    sudo chown -R www-data:www-data /var/www/html/$1/public_html/*
-    #Create the uploads directory and establish permissions
-    mkdir /var/www/html/$1/public_html/wp-content/uploads
-    cd /var/www/html/$1/public_html/wp-content/uploads
-    sudo chown -R :www-data /var/www/html/$1/public_html/wp-content/uploads
-    sudo chmod -R ugo+rw /var/www/html/$1/public_html/wp-content/uploads
-    cd /var/www/html/$1/public_html
-    sudo chmod -R ugo+rw /var/www/html/$1/public_html
-    cd /var/www/html
-
-    # Setting up Nginx mapping
-    
-    #These variables are set for facilitating the writing of the site configuration file
-    #It was the only way I could get it to work
-    urivar='$uri'
-    requri='$request_uri'
-    argsvar='$args'
-    docrootvar='$document_root'
-    fastcgivar='$fastcgi_script_name'
-    httpuseragent='$http_user_agent'
-    #Create the server block config file - it tells the server where the root directory is for the site
-    #Note: this setup establishes the site as www.site.com and not site.com. If you want the other way then
-    #you need to swap the two server names around
-    cat > /etc/nginx/sites-available/$1 << EOF
-server {
-    server_name $1;
-    return       301 http://www.$1$requri;
-}
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server ipv6only=on;
-
-    root /var/www/html/$1/public_html/;
-    index index.php index.html index.htm;
-
-    server_name www.$1;
-
-    location / {
-        try_files $urivar $urivar/ /index.php?q=$urivar&$argsvar;
-    }
-
-    error_page 404 /404.html;
-    error_page 500 502 503 504 /50x.html;
-    location = /50x.html {
-        root /usr/share/nginx/www;
-    }
-
-    location ~ \.php$ {
-        try_files $urivar =404;
-        fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass unix:/var/run/php5-fpm.sock;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $docrootvar$fastcgivar;
-        include fastcgi_params;
-    }
-	
-	if ($httpuseragent ~* (rogerbot|exabot|gigabot|sitebot|AhrefsBot|mj12bot|dobot|spbot) ) {
-		return 403;
-	}
-}
-EOF
-    #Enable the new server block
-    sudo ln -s /etc/nginx/sites-available/$1 /etc/nginx/sites-enabled/
-    #Restart the nginx service
-    sudo service nginx restart
-    invoke-rc.d nginx reload
-    sudo service php5-fpm restart
-}
-
-function install_exim4 {
-    check_install mail exim4
-    if [ -f /etc/exim4/update-exim4.conf.conf ]
-    then
-        sed -i \
-            "s/dc_eximconfig_configtype='local'/dc_eximconfig_configtype='internet'/" \
-            /etc/exim4/update-exim4.conf.conf
-        invoke-rc.d exim4 restart
-    fi
-}
-
-########################################################################
-# START OF PROGRAM
-########################################################################
-export PATH=/bin:/usr/bin:/sbin:/usr/sbin
-
-check_sanity
-case "$1" in
-exim4)
-    install_exim4
-    ;;
-mysql)
-    install_mysql
-    ;;
-nginx)
-    install_nginx
-    ;;
-php)
-    install_php
-    ;;
-system)
-    remove_unneeded
-    update_upgrade
-    install_dash
-    install_syslogd
-    install_dropbear
-    install_exim4
-    install_mysql
-    install_nginx
-    install_php
-    ;;
-wordpress)
-    install_wordpress $2
-    ;;
-*)
-    echo 'Usage:' `basename $0` '[option]'
-    echo 'Available option:'
-    for option in system exim4 mysql nginx php wordpress
-    do
-        echo '  -' $option
-    done
-    ;;
-esac
