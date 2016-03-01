@@ -301,7 +301,7 @@ server {
     return       301 http://www.$1$requri;
 }
 server {
-    listen 80 default_server;
+    listen 80;
     listen [::]:80;
 
     root /var/www/html/$1/public_html/;
