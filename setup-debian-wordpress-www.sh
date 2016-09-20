@@ -2214,6 +2214,7 @@ ldap.max_links = -1
 ; End:
 EOF
     check_install php5-gd php5-curl php5-mysql libssh2-php
+    sudo apt-get install php5-gd
     sudo service php5-fpm restart
 }
 
