@@ -199,8 +199,7 @@ function install_nginx {
 
 function install_php {
     sudo apt-get -q -y install php-fpm
-    check_install php-gd php-curl php-mysql libssh2-php
-    sudo apt-get install -q -y php-gd
+    check_install php-gd php-curl php-mysql libssh2-php php-mbstring php-mcrypt php-xml php-xmlrpc
     sudo service php7.0-fpm restart
 }
 
