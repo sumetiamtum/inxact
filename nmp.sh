@@ -2,8 +2,7 @@
 
 function install_mysql {
     # Install the MySQL packages
-    apt-get -q -y install mysqld mysql-server
-    apt-get -q -y install mysql mysql-client
+    apt-get -q -y install mariadb-server mariadb-client
 
     # Generating a new password for the root user.
     passwd=`get_password root@mysql`
@@ -40,5 +39,5 @@ apt-get -q -y install nginx
 sudo rm /etc/nginx/sites-enabled/default
 invoke-rc.d nginx restart
 sudo apt-get -q -y install php-fpm
-sudo apt-get -q -y install php-gd php-curl php-mysql libssh2-php php-mbstring php-mcrypt php-xml php-xmlrpc
+sudo apt-get -q -y install php-gd php-curl php-mysql php-ssh2 php-mbstring php-mcrypt php-xml php-xmlrpc
 sudo service php7.0-fpm restart
