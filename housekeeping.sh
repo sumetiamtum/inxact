@@ -32,10 +32,7 @@ function get_password() {
     echo ${password:0:13}
 }
 
-
-
- 
- # Program
+ # ************ Program starts here ***************
  export PATH=/bin:/usr/bin:/sbin:/usr/sbin
  
  # Remove apache2
@@ -52,13 +49,13 @@ function get_password() {
 	apt-get install -q -y sudo
 	sudo apt-get install -q -y rsync
 	sudo apt-get install -q -y nano
-# Install mysql
-install_mysql
-#Install nginx
-apt-get -q -y install nginx
-sudo rm /etc/nginx/sites-enabled/default
-invoke-rc.d nginx restart
-# Install PHP7.0
-sudo apt-get -q -y install php-fpm
-sudo apt-get -q -y install php-gd php-curl php-mysql php-ssh2 php-mbstring php-mcrypt php-xml php-xmlrpc
-sudo service php7.0-fpm restart
+  # Install mysql
+	install_mysql
+  # Install nginx
+	apt-get -q -y install nginx
+	sudo rm /etc/nginx/sites-enabled/default
+	invoke-rc.d nginx restart
+  # Install PHP7.0
+	sudo apt-get -q -y install php-fpm
+	sudo apt-get -q -y install php-gd php-curl php-mysql php-ssh2 php-mbstring php-mcrypt php-xml php-xmlrpc
+	sudo service php7.0-fpm restart
