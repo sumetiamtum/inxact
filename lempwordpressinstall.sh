@@ -322,7 +322,7 @@ server {
     location ~ \.php$ {
         try_files $urivar =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_pass unix:/var/run/php7.0-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $docrootvar$fastcgivar;
         include fastcgi_params;
@@ -337,8 +337,8 @@ EOF
     sudo ln -s /etc/nginx/sites-available/$1 /etc/nginx/sites-enabled/
     #Restart the nginx service
     sudo service nginx restart
-	#Restart the php5-fpm service
-    sudo service php5-fpm restart
+	#Restart the php7.0-fpm service
+    sudo service php7.0-fpm restart
 }
 
 function install_exim4 {
@@ -353,7 +353,6 @@ function install_exim4 {
 }
 
 function install_php {
-    sudo apt-get -q -y install php5-fpm
     sudo apt-get -q -y install php-fpm
     sudo apt-get -q -y install php-gd php-curl php-mysql php-ssh2 php-mbstring php-mcrypt php-xml php-xmlrpc
     sudo service php7.0-fpm restart
