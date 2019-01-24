@@ -327,10 +327,7 @@ server {
         fastcgi_param SCRIPT_FILENAME $docrootvar$fastcgivar;
         include fastcgi_params;
     }
-	
-	if ($httpuseragent ~* (rogerbot|exabot|gigabot|sitebot|AhrefsBot|mj12bot|dobot|spbot) ) {
-		return 403;
-	}
+
 }
 EOF
     #Enable the new server block
