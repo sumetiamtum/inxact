@@ -262,7 +262,7 @@ function install_wordpress {
     #Set up the wordpress config file with the mySQL database details
     cp wp-config-sample.php wp-config.php
     chmod 640 wp-config.php
-    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/" wp-config.php
+    sed -i "s/database_name_here/$dbname/; s/username_here/$userid/; s/password_here/$passwd/; s/define('WP_DEBUG', false);/define('WP_DEBUG', false);\ndefine('WP_MEMORY_LIMIT', '300M');/" wp-config.php
     mysqladmin create "$dbname"
     echo "GRANT ALL PRIVILEGES ON \`$dbname\`.* TO \`$userid\`@localhost IDENTIFIED BY '$passwd';" | \
         mysql
