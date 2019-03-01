@@ -238,12 +238,12 @@ function install_certbot {
 
 ########################################################################
 # Installs wordpress and creates the MariaDB database
-# This function does not create the Apache2 server block for the domain
+# It has become an all in one with the 
 ########################################################################
 function install_wordpress {
 	# just making sure wget is installed
     check_install wget wget
-    # Need a domain name or otherwise quite
+    # Need a domain name or otherwise quit
 	if [ -z "$1" ]
     then
         die "Usage: `basename $0` wordpress <hostname>"
@@ -334,6 +334,9 @@ function install_wordpress {
 export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 	check_sanity
+
+case "$1" in
+system)
 	update_upgrade_install
 	install_ufw
 	install_dash
@@ -343,4 +346,9 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	install_php
 	install_mariadb
 	install_certbot
-	install_wordpress thevenerableblog.org
+	;;
+wordpress)	
+	install_wordpress $2
+    ;;
+esac
+
