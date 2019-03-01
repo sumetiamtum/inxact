@@ -232,7 +232,7 @@ function install_certbot {
 	echo -e "deb http://ftp.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
 	sudo apt update
 	# install certbot
-	sudo apt install python-certbot-apache -t stretch-backports
+	sudo apt -y install python-certbot-apache -t stretch-backports
 }
 ########################################################################
 
@@ -326,8 +326,7 @@ function install_wordpress {
   
   # Finally install the https certificate
   sudo certbot --apache -d $1 -d www.$1
-  sudo certbot renew --dry-run
-}
+ }
 
 ########################################################################
 # START OF PROGRAM
