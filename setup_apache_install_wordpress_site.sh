@@ -343,4 +343,5 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	install_apache2
 	install_php
 	install_mariadb
+	install_certbot
 	install_wordpress thevenerableblog.org
