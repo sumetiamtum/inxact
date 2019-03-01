@@ -225,6 +225,18 @@ function update_upgrade_install {
 ########################################################################
 
 ########################################################################
+# Installs certbot for https
+########################################################################
+function install_certbot {
+	#Update the sources list
+	echo -e "deb http://ftp.debian.org/debian stretch-backports main" >> /etc/apt/sources.list
+	sudo apt update
+	# install certbot
+	sudo apt install python-certbot-apache -t stretch-backports
+}
+########################################################################
+
+########################################################################
 # Installs wordpress and creates the MariaDB database
 # This function does not create the Apache2 server block for the domain
 ########################################################################
@@ -311,6 +323,10 @@ function install_wordpress {
   
   # return to the root directory
   cd ~
+  
+  # Finally install the https certificate
+  sudo certbot --apache -d $1 -d www.$1
+  sudo certbot renew --dry-run
 }
 
 ########################################################################
