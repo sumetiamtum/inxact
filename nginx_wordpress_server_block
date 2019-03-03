@@ -1,17 +1,17 @@
 ## this block redirects all HTTP non-www to HTTP www version
 server {
-    server_name            example.com;
+    server_name            [example.com];
     listen                 *:80;
     listen                 [::]:80 ipv6only=on;
-    return 301 http://www.example.com$request_uri;
+    return 301 http://[www.example.com]$request_uri;
 }
 
 ## this block is the default configuration for the live website
 server {
-    server_name            www.example.com;
+    server_name            [www.example.com];
     listen                 *:80 default_server;
     listen                 [::]:80;
-    root                   /home/example/www;
+    root                   /var/www/html/[example]/public_html;
     index index.php index.html index.htm;
     autoindex off;
     ## improve public caching (no need for Last Modified too, and eTag is enabled by default in new Nginx versions)
