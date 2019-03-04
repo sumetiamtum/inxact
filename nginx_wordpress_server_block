@@ -9,7 +9,7 @@ server {
 ## this block is the default configuration for the live website
 server {
     server_name            !www.example.com!;
-    listen                 *:80 default_server;
+    listen                 *:80;
     listen                 [::]:80;
     root                   /var/www/html/!example!/public_html;
     index index.php index.html index.htm;
