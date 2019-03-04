@@ -360,6 +360,6 @@ system)
 	install_mariadb
 	;;
 wordpress)	
-	install_wordpress
+	install_wordpress $2
 	;;
 esac
