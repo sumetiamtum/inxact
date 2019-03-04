@@ -5,6 +5,7 @@
 # or print on the screen or creates a password
 ########################################################################
 function install_ufw {
+	echo Installing UFW
 	check_install ufw ufw
 	# set default rules to prevent all incoming traffic
 	sudo ufw default deny incoming
@@ -130,10 +131,11 @@ function check_install {
         while [ -n "$1" ]
         do
             clear
-			DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
+	    echo Installing $1
+	    DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
             print_info "$1 installed"
             shift
-			sleep 2
+	    sleep 2
         done
     else
         print_warn "$2 already installed"
@@ -148,7 +150,10 @@ function update_upgrade_install {
 	# Run through the apt-get update/upgrade first. This should be done before
 	# any package is installed
 	apt-get -q -y update
+	clear
+	sleep 2
 	apt-get -q -y upgrade
+	sleep 2
 	# install needed administrative programs
 	check_install sudo sudo
 	check_install rsync rsync
@@ -185,7 +190,7 @@ function install_nginx {
     sudo rm /etc/nginx/sites-enabled/default
 	# Get the nginx/wordpress config file and replace the existing file with this one
 	wget --no-check-certificate https://raw.githubusercontent.com/sumetiamtum/inxact/master/nginx_wordpress_conf
-	cp nginx_wordpress_conf /etc/nginx/nginx.conf
+	cp nginx_wordpress_conf nginx.conf
 	rm -r nginx_wordpress_conf
 	sudo service nginx restart
 	# Later we need to set up a server block for any websites	
@@ -272,7 +277,7 @@ function install_wordpress {
 	# First we take a pull from our github respository an example file
 	# copy the server block over to /etc/nginx/sites-available and rename to the domain
 	wget --no-check-certificate https://raw.githubusercontent.com/sumetiamtum/inxact/master/nginx_wordpress_server_block
-  cp nginx_wordpress_server_block /etc/nginx/sites-available/$1
+  	cp nginx_wordpress_server_block /etc/nginx/sites-available/$1
 	rm nginx_wordpress_server_block
 	
  	# make sure the folder reference removes [example] and insert the right location
