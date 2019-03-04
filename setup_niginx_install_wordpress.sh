@@ -190,11 +190,12 @@ function install_nginx {
     sudo rm /etc/nginx/sites-enabled/default
 	# Get the nginx/wordpress config file and replace the existing file with this one
 	wget --no-check-certificate https://raw.githubusercontent.com/sumetiamtum/inxact/master/nginx_wordpress_conf
-	cp nginx_wordpress_conf nginx.conf
+	cp nginx_wordpress_conf /etc/nginx/nginx.conf
 	rm -r nginx_wordpress_conf
 	sudo service nginx restart
 	# Later we need to set up a server block for any websites	
 	# Restart the server to bring changes into effect
+    exit
     invoke-rc.d nginx restart
 }
 ########################################################################
@@ -353,6 +354,8 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	install_dash
 	install_syslogd
 	install_exim4
+	install_nginx
 	install_php
 	install_mariadb
+	
 	install_wordpress spikesixtyniner.com
