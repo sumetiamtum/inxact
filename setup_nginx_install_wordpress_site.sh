@@ -162,6 +162,7 @@ function update_upgrade_install {
 	check_install wget wget
 	check_install curl curl
 	check_install bash-completion bash-completion
+	check_install cron cron
 }
 ########################################################################
 
@@ -313,7 +314,7 @@ function install_wordpress {
 	cd ~
   
 	# Finally install the https certificate
-	#sudo certbot --apache -d $1 -d www.$1
+	# sudo certbot --apache -d $1 -d www.$1
 }
 
 ########################################################################
@@ -347,7 +348,8 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 	check_sanity
 
-
+case "$1" in
+system)
 	update_upgrade_install
 	install_ufw
 	install_dash
@@ -356,4 +358,8 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	install_nginx
 	install_php
 	install_mariadb
-	install_wordpress spikesixtyniner.com
+	;;
+wordpress)	
+	install_wordpress
+	;;
+esac
