@@ -131,7 +131,7 @@ function check_install {
         while [ -n "$1" ]
         do
             clear
-	    echo Installing $1
+	    print_info "Installing $1"
 	    DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
             print_info "$1 installed"
             shift
@@ -195,8 +195,7 @@ function install_nginx {
 	sudo service nginx restart
 	# Later we need to set up a server block for any websites	
 	# Restart the server to bring changes into effect
-    exit
-    invoke-rc.d nginx restart
+        invoke-rc.d nginx restart
 }
 ########################################################################
 
@@ -357,5 +356,4 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 	install_nginx
 	install_php
 	install_mariadb
-	
 	install_wordpress spikesixtyniner.com
