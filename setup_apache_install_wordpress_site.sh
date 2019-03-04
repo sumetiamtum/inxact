@@ -157,7 +157,8 @@ function check_install {
         shift
         while [ -n "$1" ]
         do
-            DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
+            print_info "Installing $1"
+	    DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
             print_info "$1 installed"
             shift
         done
@@ -202,6 +203,7 @@ function install_php {
 	check_install php7.0-mbstring php7.0-mbstring
 	check_install php7.0-mcrypt php7.0-mbstring
 	check_install php7.0-xmlrpc php7.0-xmlrpc
+	check_install php7.0-zip php7.0-zip
 }
 ########################################################################
 
