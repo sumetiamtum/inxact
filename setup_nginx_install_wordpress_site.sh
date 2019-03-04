@@ -12,6 +12,8 @@ function install_ufw {
 	sudo ufw default allow outgoing
 	# allow shell connections
 	sudo ufw allow ssh
+	sudo ufw allow "Nginx HTTP"
+	sudo ufw allow "Nginx HTTPS"
 	# enable ufw
 	sudo ufw enable
 }
@@ -130,8 +132,7 @@ function check_install {
         shift
         while [ -n "$1" ]
         do
-            clear
-	    print_info "Installing $1"
+        print_info "Installing $1"
 	    DEBIAN_FRONTEND=noninteractive apt-get -q -y install "$1"
             print_info "$1 installed"
             shift
@@ -150,7 +151,6 @@ function update_upgrade_install {
 	# Run through the apt-get update/upgrade first. This should be done before
 	# any package is installed
 	apt-get -q -y update
-	clear
 	sleep 2
 	apt-get -q -y upgrade
 	sleep 2
@@ -187,8 +187,14 @@ function install_php {
 function install_nginx {
     check_install nginx nginx
     
+	cd ~
     # Disable the default server block
-    sudo rm /etc/nginx/sites-enabled/default
+    # sudo rm /etc/nginx/sites-enabled/default
+	# Remove the old nginx default file
+	# Insert blank html file
+	sudo rm /var/www/html/index.nginx-debian.html
+	wget --no-check-certificate https://raw.githubusercontent.com/sumetiamtum/inxact/master/index.html
+	mv index.html /var/www/html/
 	# Get the nginx/wordpress config file and replace the existing file with this one
 	wget --no-check-certificate https://raw.githubusercontent.com/sumetiamtum/inxact/master/nginx_wordpress_conf
 	cp nginx_wordpress_conf /etc/nginx/nginx.conf
@@ -196,7 +202,7 @@ function install_nginx {
 	sudo service nginx restart
 	# Later we need to set up a server block for any websites	
 	# Restart the server to bring changes into effect
-        invoke-rc.d nginx restart
+    invoke-rc.d nginx restart
 }
 ########################################################################
 
@@ -363,3 +369,4 @@ wordpress)
 	install_wordpress $2
 	;;
 esac
+
