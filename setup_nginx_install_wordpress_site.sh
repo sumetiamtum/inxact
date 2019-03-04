@@ -281,18 +281,18 @@ function install_wordpress {
 	rm nginx_wordpress_server_block
 	
  	# make sure the folder reference removes [example] and insert the right location
-	sed -i "s/!example!/$1/" /etc/nginx/$1
+	sed -i "s/!example!/$1/" /etc/nginx/sites-available/$1
 
 	# ask for input on whether the domain is www or not
 	while true; do
 		read -p "domain.com (1) or www.domain.com (2)?" yn
 		case $yn in
 			1 )
-				sed -i "s/!example.com!/www.$1/; s/!www.example.com!/$1/" /etc/nginx/$1
+				sed -i "s/!example.com!/www.$1/; s/!www.example.com!/$1/" /etc/nginx/sites-available/$1
 				break
 				;;
 			2 )
-				sed -i "s/!www.example.com!/www.$1/; s/!example.com!/$1/" /etc/nginx/$1
+				sed -i "s/!www.example.com!/www.$1/; s/!example.com!/$1/" /etc/nginx/sites-available/$1
 				break
 				;;
 			* ) echo "Please choose (1) or (2)."
