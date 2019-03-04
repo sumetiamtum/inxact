@@ -37,7 +37,7 @@ EOF
 	echo -e "\e[31Upgrade everything again\e[0m"
 	apt-get -q -y upgrade
 	echo -e "\e[31Upgrade the distribution to Stretch\e[0m"
-	apt-get dist-upgrade
+	apt-get -q -y dist-upgrade
 	echo -e "\e[31About to reboot\e[0m"
 	sleep 3
 	reboot
