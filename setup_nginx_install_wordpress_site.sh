@@ -357,13 +357,13 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin
 case "$1" in
 system)
 	update_upgrade_install
-	install_ufw
 	install_dash
 	install_syslogd
 	install_exim4
 	install_nginx
 	install_php
 	install_mariadb
+	install_ufw
 	;;
 wordpress)	
 	install_wordpress $2
