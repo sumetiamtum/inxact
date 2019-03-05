@@ -222,6 +222,7 @@ function update_upgrade_install {
 	check_install net-tools net-tools
 	check_install wget wget
 	check_install curl curl
+	check_install cron cron
 	check_install bash-completion bash-completion
 }
 ########################################################################
@@ -325,10 +326,7 @@ function install_wordpress {
   
   # return to the root directory
   cd ~
-  
-  # Finally install the https certificate
-  sudo certbot --apache -d $1 -d www.$1
- }
+}
 
 ########################################################################
 # START OF PROGRAM
