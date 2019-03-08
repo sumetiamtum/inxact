@@ -244,8 +244,6 @@ function install_certbot {
 # It has become an all in one with the 
 ########################################################################
 function install_wordpress {
-	# just making sure wget is installed
-    check_install wget wget
     # Need a domain name or otherwise quit
 	if [ -z "$1" ]
     then
