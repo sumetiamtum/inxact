@@ -185,6 +185,8 @@ function install_apache2 {
 	echo -e "Options -Indexes" >> /var/www/html/.htaccess
 	# Remove the index.html file from the default folder
 	rm -r /var/www/html/index.html
+	# Enable rewrite module
+	sudo a2enmod rewrite
 	# Restart apache2 to make it all work live
 	sudo systemctl restart apache2.service mariadb.service
 	sudo systemctl enable apache2.service mariadb.service
