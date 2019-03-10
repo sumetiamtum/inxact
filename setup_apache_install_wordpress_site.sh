@@ -319,7 +319,9 @@ function install_wordpress {
 	sed -i "s|#ServerName www.example.com|ServerName $1\n        ServerAlias www.$1|; s|var/www/html|var/www/html/$1/public_html|" $1.conf
 	
 	# Enable the server block
-    sudo ln -s /etc/apache2/sites-available/$1.conf /etc/apache2/sites-enabled/
+        sudo ln -s /etc/apache2/sites-available/$1.conf /etc/apache2/sites-enabled/
+	# Enable rewrite mode
+	sudo a2enmod rewrite
 	# Restart apache2 to make it all work live
 	sudo systemctl restart apache2.service mariadb.service
 	sudo systemctl enable apache2.service mariadb.service
