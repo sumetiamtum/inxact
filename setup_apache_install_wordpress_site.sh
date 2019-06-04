@@ -34,18 +34,18 @@ function die {
 }
 
 function print_info {
-    echo -n -e '\e[1;36m'
+    echo -e '\033[0;32m'
     echo "###################################################################################"
     echo $1
     echo "###################################################################################"
-    echo -e '\e[0m' 
+    echo -e '\033[0m' 
 }
 
 function print_warn {
     echo "###################################################################################"
-    echo -n -e '\e[1;33m'
+    echo -e '\033[0;31m'
     echo $1
-    echo -e '\e[0m'
+    echo -e '\033[0m'
     echo "###################################################################################"
 }
 
@@ -148,6 +148,15 @@ user = root
 password = $passwd
 END
     chmod 600 ~/.my.cnf
+}
+########################################################################
+
+########################################################################
+# Install MariaDB and create root password
+########################################################################
+function install_phpmyadmin {
+	# Install the phpmyadmin package
+    check_install phpmyadmin
 }
 ########################################################################
 
@@ -351,6 +360,7 @@ system)
 	install_apache2
 	install_php
 	install_mariadb
+	install_phpmyadmin
 	install_certbot
 	;;
 wordpress)	
